@@ -1,4 +1,42 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // 0. Preloader Logic
+    const preloader = document.createElement('div');
+    preloader.id = 'preloader';
+    preloader.innerHTML = `
+        <img src="P.png" alt="Loading Logo">
+        <div class="loader-line"></div>
+    `;
+    document.body.prepend(preloader);
+
+    let loadingTimeout;
+    const hidePreloader = () => {
+        preloader.classList.add('loaded');
+    };
+
+    const showPreloader = () => {
+        preloader.classList.remove('loaded');
+    };
+
+    const checkAllImagesLoaded = () => {
+        const images = document.querySelectorAll('img');
+        let allLoaded = true;
+        images.forEach(img => {
+            if (!img.complete) {
+                allLoaded = false;
+            }
+        });
+        
+        if (allLoaded) {
+            hidePreloader();
+        } else {
+            showPreloader();
+            clearTimeout(loadingTimeout);
+            loadingTimeout = setTimeout(checkAllImagesLoaded, 200);
+        }
+    };
+
+    checkAllImagesLoaded();
+
     // 1. Custom Cursor
     const cursor = document.createElement('div');
     cursor.classList.add('custom-cursor');
@@ -75,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mutations.forEach(mutation => {
             if (mutation.addedNodes.length) {
                 setupImageInteractions();
+                checkAllImagesLoaded();
             }
         });
     });

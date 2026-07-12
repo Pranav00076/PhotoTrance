@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const images = document.querySelectorAll('img');
         let allLoaded = true;
         images.forEach(img => {
-            if (!img.complete) {
+            if (!img.complete && img.getAttribute('loading') !== 'lazy' && img.src) {
                 allLoaded = false;
             }
         });
@@ -81,10 +81,107 @@ document.addEventListener('DOMContentLoaded', () => {
     const lightboxImg = document.createElement('img');
     lightbox.appendChild(lightboxImg);
 
+    // Zoom UI
+    const zoomContainer = document.createElement('div');
+    zoomContainer.id = 'zoom-container';
+    
+    const zoomOutIcon = document.createElement('span');
+    zoomOutIcon.textContent = '-';
+    zoomOutIcon.style.cursor = 'pointer';
+    zoomOutIcon.style.padding = '0 5px';
+    zoomOutIcon.addEventListener('click', () => {
+        zoomSlider.value = Math.max(parseFloat(zoomSlider.min), parseFloat(zoomSlider.value) - 0.5);
+        lightbox.style.setProperty('--zoom-level', zoomSlider.value);
+    });
+    
+    const zoomInIcon = document.createElement('span');
+    zoomInIcon.textContent = '+';
+    zoomInIcon.style.cursor = 'pointer';
+    zoomInIcon.style.padding = '0 5px';
+    zoomInIcon.addEventListener('click', () => {
+        zoomSlider.value = Math.min(parseFloat(zoomSlider.max), parseFloat(zoomSlider.value) + 0.5);
+        lightbox.style.setProperty('--zoom-level', zoomSlider.value);
+    });
+
+    const zoomSlider = document.createElement('input');
+    zoomSlider.type = 'range';
+    zoomSlider.id = 'zoom-slider';
+    zoomSlider.min = '1';
+    zoomSlider.max = '4';
+    zoomSlider.step = '0.1';
+    zoomSlider.value = '1';
+
+    zoomContainer.appendChild(zoomOutIcon);
+    zoomContainer.appendChild(zoomSlider);
+    zoomContainer.appendChild(zoomInIcon);
+    lightbox.appendChild(zoomContainer);
+
+    let isDragging = false;
+    let hasDragged = false;
+    let startX, startY;
+    let translateX = 0, translateY = 0;
+
+    lightboxImg.addEventListener('mousedown', (e) => {
+        if (parseFloat(zoomSlider.value) > 1) {
+            isDragging = true;
+            hasDragged = false;
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+            lightboxImg.style.cursor = 'grabbing';
+            lightboxImg.style.transition = 'none';
+            e.preventDefault();
+        }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        hasDragged = true;
+        translateX = e.clientX - startX;
+        translateY = e.clientY - startY;
+        lightbox.style.setProperty('--tx', `${translateX}px`);
+        lightbox.style.setProperty('--ty', `${translateY}px`);
+    });
+
+    window.addEventListener('mouseup', () => {
+        if (isDragging) {
+            isDragging = false;
+            lightboxImg.style.cursor = '';
+            lightboxImg.style.transition = '';
+            // We set a small timeout to allow click event to fire with hasDragged = true
+            setTimeout(() => hasDragged = false, 50);
+        }
+    });
+
+    lightbox.addEventListener('wheel', (e) => {
+        if (parseFloat(zoomSlider.value) > 1) {
+            translateX -= e.deltaX;
+            translateY -= e.deltaY;
+            lightbox.style.setProperty('--tx', `${translateX}px`);
+            lightbox.style.setProperty('--ty', `${translateY}px`);
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    zoomContainer.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent closing when clicking slider
+    });
+
+    zoomSlider.addEventListener('input', (e) => {
+        lightbox.style.setProperty('--zoom-level', e.target.value);
+    });
+
     const closeLightbox = () => {
+        if (hasDragged) return; // Prevent closing immediately after dragging
         lightbox.classList.remove('active');
         setTimeout(() => {
             lightboxImg.src = '';
+            // Reset zoom and pan
+            zoomSlider.value = '1';
+            translateX = 0;
+            translateY = 0;
+            lightbox.style.setProperty('--zoom-level', '1');
+            lightbox.style.setProperty('--tx', '0px');
+            lightbox.style.setProperty('--ty', '0px');
         }, 400); // match transition duration
     };
 

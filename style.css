@@ -466,7 +466,81 @@ a, button, input, select {
 }
 
 #lightbox.active img {
-    transform: scale(1);
+    transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(var(--zoom-level, 1));
+}
+
+#zoom-container {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(25, 25, 25, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 10px 20px;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    z-index: 10001;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+#lightbox.active #zoom-container {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#zoom-container span {
+    color: #fff;
+    font-family: 'BBH Sans Bartle', monospace; /* matches site aesthetics loosely or sans-serif */
+    font-size: 18px;
+    user-select: none;
+}
+
+#zoom-slider {
+    -webkit-appearance: none;
+    width: 150px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+}
+
+#zoom-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #e6b981; /* Accent color matching site aesthetics (like Showcase text underline) */
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    transition: transform 0.2s;
+}
+
+#zoom-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+#zoom-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #e6b981;
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    border: none;
+    transition: transform 0.2s;
+}
+
+#zoom-slider::-moz-range-thumb:hover {
+    transform: scale(1.2);
 }
 
 /* Scroll Reveal */
